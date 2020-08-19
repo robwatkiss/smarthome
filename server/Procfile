@@ -1,2 +1,2 @@
-web: gunicorn smarthome/wsgi.py
+web: gunicorn smarthome.wsgi:application --preload --workers 4
 release: python manage.py migrate
