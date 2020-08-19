@@ -1,1 +1,2 @@
 web: gunicorn smarthome/wsgi.py
+release: python manage.py migrate
