@@ -12,19 +12,24 @@ class Command(BaseCommand):
         weather = response.json()
 
         fields = {
-            'ambient_temp': weather['main']['temp'],
-            'ambient_temp_feels_like': weather['main']['feels_like'],
-            'ambient_pressure': weather['main']['pressure'],
-            'ambient_humidity': weather['main']['humidity'],
-            'visibility': weather['visibility'],
-            'wind_speed': weather['wind']['speed'],
-            'wind_deg': weather['wind']['deg'],
-            'wind_gust': weather['wind']['gust'],
-            'clouds': weather['clouds']['all']
+            'ambient_temp': weather.get('main', {}).get('temp', None),
+            'ambient_temp_feels_like': weather.get('main', {}).get('feels_like', None),
+            'ambient_pressure': weather.get('main', {}).get('pressure', None),
+            'ambient_humidity': weather.get('main', {}).get('humidity', None),
+            'visibility': weather.get('visibility', None),
+            'wind_speed': weather.get('wind', {}).get('speed', None),
+            'wind_deg': weather.get('wind', {}).get('deg', None),
+            'wind_gust': weather.get('wind', {}).get('gust', None),
+            'clouds': weather.get('clouds', {}).get('all', None),
+            'rain': weather.get('rain', {}).get('1h', 0),
+            'snow': weather.get('snow', {}).get('1h', 0)
         }
 
         entries = []
         for field, value in fields.items():
+            if value is None:
+                continue
+
             entries.append(Entry(
                 source = 'weather',
                 field = field,
