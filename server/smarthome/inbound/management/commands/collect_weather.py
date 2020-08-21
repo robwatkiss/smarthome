@@ -1,3 +1,4 @@
+import os
 import requests
 from django.db.models import Max
 from django.core.management.base import BaseCommand, CommandError
@@ -7,7 +8,7 @@ class Command(BaseCommand):
     help = 'Collects weather data and stores it'
 
     def handle(self, *args, **options):
-        response = requests.get("https://api.openweathermap.org/data/2.5/weather?lat=51.462254&appid=6472b326579fd18de85118950380da91&lon=-0.182535&units=metric")
+        response = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat=51.462254&appid={os.environ['OPENWEATHERMAP_API_KEY']}&lon=-0.182535&units=metric")
         weather = response.json()
 
         fields = {
