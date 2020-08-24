@@ -129,9 +129,6 @@ STATIC_URL = '/static/'
 
 use_default_database = True
 if 'DATABASE_URL_OVERRIDE' in os.environ:
-    logger.info(
-        'Adding $DATABASE_URL_OVERRIDE to default DATABASE Django setting.')
-
     # Configure Django for DATABASE_URL environment variable.
     config['DATABASES']['default'] = dj_database_url.config('DATABASE_URL_OVERRIDE', conn_max_age=600, ssl_require=True)
     use_default_database = False
