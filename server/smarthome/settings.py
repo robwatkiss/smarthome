@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
+import dj_database_url
 import django_heroku
 import os
 
@@ -126,4 +127,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-django_heroku.settings(locals())
+use_default_database = True
+if 'DATABASE_URL_OVERRIDE' in os.environ:
+    logger.info(
+        'Adding $DATABASE_URL_OVERRIDE to default DATABASE Django setting.')
+
+    # Configure Django for DATABASE_URL environment variable.
+    config['DATABASES']['default'] = dj_database_url.config('DATABASE_URL_OVERRIDE', conn_max_age=600, ssl_require=True)
+    use_default_database = False
+
+django_heroku.settings(locals(), databases=use_default_database)
