@@ -14,6 +14,15 @@ import dj_database_url
 import django_heroku
 import os
 
+import sentry_sdk
+from sentry_sdk.integrations.django import \
+    DjangoIntegration
+
+sentry_sdk.init(
+    "https://81903f8674a94259870f83927187dd97@o438422.ingest.sentry.io/5403909",
+    integrations=[DjangoIntegration()]
+)
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
