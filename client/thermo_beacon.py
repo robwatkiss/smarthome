@@ -12,7 +12,7 @@ class ThermoBeaconScanner(object):
     temperature and humidity
     """
 
-    def __init__(self, mac_allowlist=[], debug=False):
+    def __init__(self, mac_allowlist={}, debug=False):
         logger.info("Initialising ThermoBeaconScanner - mac_allow_list = {mac_allow_list}, debug = {debug}")
         if not mac_allowlist:
             raise Exception('Missing arg mac_allowlist')
@@ -53,21 +53,25 @@ class ThermoBeaconScanner(object):
     def is_valid_target(self, event):
         return any([x.val in self.mac_allowlist for x in event.retrieve('peer')])
 
-    def stop(self):
-        logger.info("Stopping scanner")
-        self.btctrl.stop_scan_request()
-        self.btctrl.send_command(aiobs.HCI_Cmd_LE_Advertise(enable=False))
-        self.conn.close()
+    def stop(self, mac_address = None):
+        # Remove mac_address from mac_allowlist so we don't record the same one multiple times
+        if mac_address:
+            del self.mac_allowlist[mac_address]
 
-        try:
-            self.event_loop.stop()
-            self.event_loop.close()
-        except RuntimeError:
-            # This throws a RuntimeError as we're trying to close a running event loop
-            # just ignore it since we're about to shutdown this instance anyway
-            pass
-        logger.info("Stopped")
+        if len(self.mac_allowlist) == 0 or not mac_address:
+            logger.info("Stopping scanner")
+            self.btctrl.stop_scan_request()
+            self.btctrl.send_command(aiobs.HCI_Cmd_LE_Advertise(enable=False))
+            self.conn.close()
 
+            try:
+                self.event_loop.stop()
+                self.event_loop.close()
+            except RuntimeError:
+                # This throws a RuntimeError as we're trying to close a running event loop
+                # just ignore it since we're about to shutdown this instance anyway
+                pass
+            logger.info("Stopped")
 
 class ThermoBeaconPacket(object):
     """
@@ -80,6 +84,9 @@ class ThermoBeaconPacket(object):
 
         # Parse payload
         self.parse_payload()
+
+    def get_mac_address(self):
+        return self.event.retrieve('peer')[0].val
 
     def parse_payload(self):
         # Strip first 16 bytes and create a byte array from the remaining bytes
@@ -103,7 +110,7 @@ class ThermoBeaconPacket(object):
         
         # Gather values we care about
         body = {
-            'source': self.event.retrieve('peer')[0].val,
+            'source': self.scanner.mac_allowlist[self.get_mac_address()],
             'fields': {
                 'battery': self.get_int_at_pos(12, 2, False),
                 'temperature': self.get_int_at_pos(14, 2) / 16,
@@ -117,7 +124,7 @@ class ThermoBeaconPacket(object):
         # Send parsed body to server (synchronous by design)
         self.uploader = DataUploader(body)
 
-        self.scanner.stop()
+        self.scanner.stop(self.get_mac_address())
 
     def get_int(self, bytes_, signed=True):
         return int.from_bytes(bytes_, byteorder='little', signed=signed)
@@ -129,7 +136,13 @@ class ThermoBeaconPacket(object):
 if __name__ == '__main__':
     logger.info("Running thermo_beacon.py")
     try:
-        scanner = ThermoBeaconScanner(['49:8a:00:00:01:d7'])
+        scanner = ThermoBeaconScanner({
+            '49:8a:00:00:01:d7': 'Freezer',
+            '49:8a:00:00:09:58': 'Living Room',
+            '49:8a:00:00:06:f4': 'Fridge',
+            '49:8a:00:00:03:c8': 'Bedroom',
+            '49:8a:00:00:08:cd': 'Cupboard'
+        })
         scanner.event_loop.run_forever()
     except KeyboardInterrupt:
         print("break")

@@ -1,6 +1,5 @@
 import os
 import requests
-from django.db.models import Max
 from django.core.management.base import BaseCommand, CommandError
 from smarthome.inbound.models import Entry
 
