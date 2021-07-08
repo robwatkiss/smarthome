@@ -1,6 +1,6 @@
 ```bash
 sudo apt-get update
-sudo apt-get install --upgrade bluez virtualenv pi-bluetooth
+sudo apt-get install --upgrade bluez virtualenv pi-bluetooth bluetooth libbluetooth-dev
 
 # I don't think this actually works
 sudo usermod -a -G bluetooth pi
@@ -24,3 +24,5 @@ Add to `/etc/dbus-1/system.d/bluetooth.conf`:
 ```bash
 sudo systemctl restart dbus
 ```
+
+Note: python must be run as sudo!

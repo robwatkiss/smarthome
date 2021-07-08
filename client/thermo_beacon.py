@@ -6,6 +6,11 @@ from upload import DataUploader
 from logger import logger
 import time
 
+import sentry_sdk
+sentry_sdk.init(
+    "https://9753705b45644507a4c95f7aca4d324e@o206700.ingest.sentry.io/5831088"
+)
+
 class ThermoBeaconScanner(object):
     """
     Scans for BLE devices with a matching MAC address and attempts to read
@@ -13,7 +18,7 @@ class ThermoBeaconScanner(object):
     """
 
     def __init__(self, mac_allowlist={}, debug=False):
-        logger.info("Initialising ThermoBeaconScanner - mac_allow_list = {mac_allow_list}, debug = {debug}")
+        logger.info(f"Initialising ThermoBeaconScanner - mac_allow_list = {mac_allowlist}, debug = {debug}")
         if not mac_allowlist:
             raise Exception('Missing arg mac_allowlist')
         self.mac_allowlist = mac_allowlist
@@ -133,7 +138,7 @@ class ThermoBeaconPacket(object):
         bytes_ = b''.join(self.byte_array[self.start + offset:self.start + offset + length])
         return self.get_int(bytes_, signed)
 
-if __name__ == '__main__':
+def run():
     logger.info("Running thermo_beacon.py")
     try:
         scanner = ThermoBeaconScanner({
@@ -147,6 +152,12 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("break")
     finally:
-        if scanner.event_loop.is_running():
-            scanner.stop()
+        try:
+            if scanner.event_loop.is_running():
+                scanner.stop()
+        except:
+            print("Failed to stop scanner")
     logger.info("Done")
+
+if __name__ == '__main__':
+    run()
